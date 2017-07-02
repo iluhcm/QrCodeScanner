@@ -20,32 +20,39 @@ import android.os.Message;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.BinaryBitmap;
 import com.google.zxing.DecodeHintType;
+import com.google.zxing.MultiFormatReader;
 import com.google.zxing.PlanarYUVLuminanceSource;
 import com.google.zxing.ReaderException;
 import com.google.zxing.Result;
 import com.google.zxing.common.HybridBinarizer;
-import com.google.zxing.qrcode.QRCodeReader;
 import com.kaola.qrcodescanner.R;
 import com.kaola.qrcodescanner.qrcode.QrCodeActivity;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Hashtable;
 import java.util.Map;
 
 final class DecodeHandler extends Handler {
 
     private final QrCodeActivity mActivity;
-    private final QRCodeReader mQrCodeReader;
+    private final MultiFormatReader mMultiFormatReader;
     private final Map<DecodeHintType, Object> mHints;
     private byte[] mRotatedData;
 
     DecodeHandler(QrCodeActivity activity) {
         this.mActivity = activity;
-        mQrCodeReader = new QRCodeReader();
+        mMultiFormatReader = new MultiFormatReader();
         mHints = new Hashtable<>();
         mHints.put(DecodeHintType.CHARACTER_SET, "utf-8");
         mHints.put(DecodeHintType.TRY_HARDER, Boolean.TRUE);
-        mHints.put(DecodeHintType.POSSIBLE_FORMATS, BarcodeFormat.QR_CODE);
+        Collection<BarcodeFormat> barcodeFormats = new ArrayList<>();
+        barcodeFormats.add(BarcodeFormat.QR_CODE);
+        barcodeFormats.add(BarcodeFormat.CODE_39);
+        barcodeFormats.add(BarcodeFormat.CODE_93);
+        barcodeFormats.add(BarcodeFormat.CODE_128);
+        mHints.put(DecodeHintType.POSSIBLE_FORMATS, barcodeFormats);
     }
 
     @Override
@@ -97,10 +104,10 @@ final class DecodeHandler extends Handler {
             PlanarYUVLuminanceSource source =
                     new PlanarYUVLuminanceSource(mRotatedData, width, height, 0, 0, width, height, false);
             BinaryBitmap bitmap1 = new BinaryBitmap(new HybridBinarizer(source));
-            rawResult = mQrCodeReader.decode(bitmap1, mHints);
-        } catch (ReaderException e) {
+            rawResult = mMultiFormatReader.decode(bitmap1, mHints);
+        } catch (ReaderException ignored) {
         } finally {
-            mQrCodeReader.reset();
+            mMultiFormatReader.reset();
         }
 
         if (rawResult != null) {
