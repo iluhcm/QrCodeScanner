@@ -35,13 +35,12 @@
 
     </RelativeLayout>
 
-    <SurfaceView
-        android:id="@+id/qr_code_preview_view"
+    <ViewStub
+        android:id="@+id/qr_code_view_stub"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@id/qr_code_header_bar"
         android:layout_gravity="center"
-        android:visibility="visible"
         />
 
     <com.kaola.qrcodescanner.qrcode.view.QrCodeFinderView

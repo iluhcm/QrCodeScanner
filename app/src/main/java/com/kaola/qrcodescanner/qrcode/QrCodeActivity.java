@@ -15,6 +15,7 @@ import android.view.SurfaceHolder.Callback;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.ViewStub;
 import android.view.Window;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -49,6 +50,7 @@ public class QrCodeActivity extends Activity implements Callback, OnClickListene
     private boolean mNeedFlashLightOpen = true;
     private ImageView mIvFlashLight;
     private TextView mTvFlashLightText;
+    private ViewStub mSurfaceViewStub;
     private DecodeManager mDecodeManager = new DecodeManager();
 
     @Override
@@ -66,8 +68,8 @@ public class QrCodeActivity extends Activity implements Callback, OnClickListene
         mIvFlashLight = (ImageView) findViewById(R.id.qr_code_iv_flash_light);
         mTvFlashLightText = (TextView) findViewById(R.id.qr_code_tv_flash_light);
         mQrCodeFinderView = (QrCodeFinderView) findViewById(R.id.qr_code_view_finder);
-        mSurfaceView = (SurfaceView) findViewById(R.id.qr_code_preview_view);
         mLlFlashLight = findViewById(R.id.qr_code_ll_flash_light);
+        mSurfaceViewStub = (ViewStub) findViewById(R.id.qr_code_view_stub);
         mHasSurface = false;
         getWindow().getDecorView().postDelayed(new Runnable() {
             @Override
@@ -87,15 +89,23 @@ public class QrCodeActivity extends Activity implements Callback, OnClickListene
     protected void onResume() {
         super.onResume();
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
-            SurfaceHolder surfaceHolder = mSurfaceView.getHolder();
-            if (mHasSurface) {
-                initCamera(surfaceHolder);
-            } else {
-                surfaceHolder.addCallback(this);
-                surfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
-            }
+            initCamera();
         } else {
             ActivityCompat.requestPermissions(this, new String[] { Manifest.permission.CAMERA }, REQUEST_PERMISSIONS);
+        }
+    }
+
+    private void initCamera() {
+        if (null == mSurfaceView) {
+            mSurfaceViewStub.setLayoutResource(R.layout.layout_surface_view);
+            mSurfaceView = (SurfaceView) mSurfaceViewStub.inflate();
+        }
+        SurfaceHolder surfaceHolder = mSurfaceView.getHolder();
+        if (mHasSurface) {
+            initCamera(surfaceHolder);
+        } else {
+            surfaceHolder.addCallback(this);
+            surfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
         }
     }
 
@@ -107,7 +117,9 @@ public class QrCodeActivity extends Activity implements Callback, OnClickListene
                 mCaptureActivityHandler.quitSynchronously();
                 mCaptureActivityHandler = null;
                 mHasSurface = false;
-                mSurfaceView.getHolder().removeCallback(this);
+                if (null != mSurfaceView) {
+                    mSurfaceView.getHolder().removeCallback(this);
+                }
                 CameraManager.get().closeDriver();
             } catch (Exception e) {
                 // 关闭摄像头失败的情况下,最好退出该Activity,否则下次初始化的时候会显示摄像头已占用.
@@ -167,7 +179,6 @@ public class QrCodeActivity extends Activity implements Callback, OnClickListene
             return;
         }
         mQrCodeFinderView.setVisibility(View.VISIBLE);
-        mSurfaceView.setVisibility(View.VISIBLE);
         mLlFlashLight.setVisibility(View.VISIBLE);
         findViewById(R.id.qr_code_view_background).setVisibility(View.GONE);
         turnFlashLightOff();
@@ -249,13 +260,7 @@ public class QrCodeActivity extends Activity implements Callback, OnClickListene
         if (grantResults.length != 0) {
             int cameraPermission = grantResults[0];
             if (cameraPermission == PackageManager.PERMISSION_GRANTED) {
-                SurfaceHolder surfaceHolder = mSurfaceView.getHolder();
-                if (mHasSurface) {
-                    initCamera(surfaceHolder);
-                } else {
-                    surfaceHolder.addCallback(this);
-                    surfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
-                }
+                initCamera();
             } else {
                 ActivityCompat.requestPermissions(this, new String[] { Manifest.permission.CAMERA },
                         REQUEST_PERMISSIONS);
