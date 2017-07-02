@@ -16,11 +16,7 @@
 
 package com.google.zxing;
 
-import com.google.zxing.aztec.AztecReader;
-import com.google.zxing.datamatrix.DataMatrixReader;
-import com.google.zxing.maxicode.MaxiCodeReader;
 import com.google.zxing.oned.MultiFormatOneDReader;
-import com.google.zxing.pdf417.PDF417Reader;
 import com.google.zxing.qrcode.QRCodeReader;
 
 import java.util.ArrayList;
@@ -120,18 +116,6 @@ public final class MultiFormatReader implements Reader {
       if (formats.contains(BarcodeFormat.QR_CODE)) {
         readers.add(new QRCodeReader());
       }
-      if (formats.contains(BarcodeFormat.DATA_MATRIX)) {
-        readers.add(new DataMatrixReader());
-      }
-      if (formats.contains(BarcodeFormat.AZTEC)) {
-        readers.add(new AztecReader());
-      }
-      if (formats.contains(BarcodeFormat.PDF_417)) {
-         readers.add(new PDF417Reader());
-      }
-      if (formats.contains(BarcodeFormat.MAXICODE)) {
-         readers.add(new MaxiCodeReader());
-      }
       // At end in "try harder" mode
       if (addOneDReader && tryHarder) {
         readers.add(new MultiFormatOneDReader(hints));
@@ -143,10 +127,6 @@ public final class MultiFormatReader implements Reader {
       }
 
       readers.add(new QRCodeReader());
-      readers.add(new DataMatrixReader());
-      readers.add(new AztecReader());
-      readers.add(new PDF417Reader());
-      readers.add(new MaxiCodeReader());
 
       if (tryHarder) {
         readers.add(new MultiFormatOneDReader(hints));
