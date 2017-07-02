@@ -3,6 +3,8 @@ package com.kaola.qrcodescanner.qrcode.utils;
 import android.content.Context;
 import android.util.DisplayMetrics;
 
+import com.kaola.qrcodescanner.qrcode.QrCodeApplication;
+
 /**
  * ScreenUtils
  * <ul>
@@ -22,8 +24,8 @@ public class ScreenUtils {
      *
      * @return
      */
-    public static int getScreenWidth(Context context) {
-
+    public static int getScreenWidth() {
+        Context context = QrCodeApplication.sAppContext;
         DisplayMetrics dm = context.getResources().getDisplayMetrics();
         return dm.widthPixels;
     }
@@ -33,10 +35,9 @@ public class ScreenUtils {
      *
      * @return
      */
-    public static int getScreenHeight(Context context) {
+    public static int getScreenHeight() {
+        Context context = QrCodeApplication.sAppContext;
         DisplayMetrics dm = context.getResources().getDisplayMetrics();
-        int screenHeight = dm.heightPixels;
-        return screenHeight;
+        return dm.heightPixels;
     }
-
 }

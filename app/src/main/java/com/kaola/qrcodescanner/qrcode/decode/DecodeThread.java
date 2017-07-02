@@ -20,15 +20,14 @@ import com.kaola.qrcodescanner.qrcode.QrCodeActivity;
 
 import java.util.concurrent.CountDownLatch;
 
-
 /**
  * This thread does all the heavy lifting of decoding the images.
  */
 final class DecodeThread extends Thread {
 
     private final QrCodeActivity mActivity;
-    private Handler mHandler;
     private final CountDownLatch mHandlerInitLatch;
+    private Handler mHandler;
 
     DecodeThread(QrCodeActivity activity) {
         this.mActivity = activity;
@@ -51,5 +50,4 @@ final class DecodeThread extends Thread {
         mHandlerInitLatch.countDown();
         Looper.loop();
     }
-
 }

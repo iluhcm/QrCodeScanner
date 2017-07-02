@@ -13,7 +13,6 @@
 
 package com.kaola.qrcodescanner.qrcode.camera;
 
-import android.content.Context;
 import android.graphics.Point;
 import android.hardware.Camera;
 import android.util.Log;
@@ -34,44 +33,6 @@ final class CameraConfigurationManager {
 
     private Camera.Size mCameraResolution;
     private Camera.Size mPictureResolution;
-    private Context mContext;
-
-    CameraConfigurationManager(Context context) {
-        this.mContext = context;
-    }
-
-    /**
-     * Reads, one time, values from the camera that are needed by the app.
-     */
-    void initFromCameraParameters(Camera camera) {
-        Camera.Parameters parameters = camera.getParameters();
-        mCameraResolution = findCloselySize(ScreenUtils.getScreenWidth(mContext), ScreenUtils.getScreenHeight(mContext),
-            parameters.getSupportedPreviewSizes());
-        Log.e(TAG, "Setting preview size: " + mCameraResolution.width + "-" + mCameraResolution.height);
-        mPictureResolution = findCloselySize(ScreenUtils.getScreenWidth(mContext),
-            ScreenUtils.getScreenHeight(mContext), parameters.getSupportedPictureSizes());
-        Log.e(TAG, "Setting picture size: " + mPictureResolution.width + "-" + mPictureResolution.height);
-    }
-
-    /**
-     * Sets the camera up to take preview images which are used for both preview and decoding. We detect the preview
-     * format here so that buildLuminanceSource() can build an appropriate LuminanceSource subclass. In the future we
-     * may want to force YUV420SP as it's the smallest, and the planar Y can be used for barcode scanning without a copy
-     * in some cases.
-     */
-    void setDesiredCameraParameters(Camera camera) {
-
-        Camera.Parameters parameters = camera.getParameters();
-        parameters.setPreviewSize(mCameraResolution.width, mCameraResolution.height);
-        parameters.setPictureSize(mPictureResolution.width, mPictureResolution.height);
-        setZoom(parameters);
-        camera.setDisplayOrientation(90);
-        camera.setParameters(parameters);
-    }
-
-    Camera.Size getCameraResolution() {
-        return mCameraResolution;
-    }
 
     private static Point getCameraResolution(Camera.Parameters parameters, Point screenResolution) {
 
@@ -129,7 +90,6 @@ final class CameraConfigurationManager {
                 bestY = newY;
                 diff = newDiff;
             }
-
         }
 
         if (bestX > 0 && bestY > 0) {
@@ -154,6 +114,43 @@ final class CameraConfigurationManager {
             }
         }
         return tenBestValue;
+    }
+
+    public static int getDesiredSharpness() {
+        return DESIRED_SHARPNESS;
+    }
+
+    /**
+     * Reads, one time, values from the camera that are needed by the app.
+     */
+    void initFromCameraParameters(Camera camera) {
+        Camera.Parameters parameters = camera.getParameters();
+        mCameraResolution = findCloselySize(ScreenUtils.getScreenWidth(), ScreenUtils.getScreenHeight(),
+                parameters.getSupportedPreviewSizes());
+        Log.e(TAG, "Setting preview size: " + mCameraResolution.width + "-" + mCameraResolution.height);
+        mPictureResolution = findCloselySize(ScreenUtils.getScreenWidth(), ScreenUtils.getScreenHeight(),
+                parameters.getSupportedPictureSizes());
+        Log.e(TAG, "Setting picture size: " + mPictureResolution.width + "-" + mPictureResolution.height);
+    }
+
+    /**
+     * Sets the camera up to take preview images which are used for both preview and decoding. We detect the preview
+     * format here so that buildLuminanceSource() can build an appropriate LuminanceSource subclass. In the future we
+     * may want to force YUV420SP as it's the smallest, and the planar Y can be used for barcode scanning without a copy
+     * in some cases.
+     */
+    void setDesiredCameraParameters(Camera camera) {
+
+        Camera.Parameters parameters = camera.getParameters();
+        parameters.setPreviewSize(mCameraResolution.width, mCameraResolution.height);
+        parameters.setPictureSize(mPictureResolution.width, mPictureResolution.height);
+        setZoom(parameters);
+        camera.setDisplayOrientation(90);
+        camera.setParameters(parameters);
+    }
+
+    Camera.Size getCameraResolution() {
+        return mCameraResolution;
     }
 
     private void setZoom(Camera.Parameters parameters) {
@@ -224,10 +221,6 @@ final class CameraConfigurationManager {
         // if (takingPictureZoomMaxString != null) {
         // parameters.set("taking-picture-zoom", tenDesiredZoom);
         // }
-    }
-
-    public static int getDesiredSharpness() {
-        return DESIRED_SHARPNESS;
     }
 
     /**

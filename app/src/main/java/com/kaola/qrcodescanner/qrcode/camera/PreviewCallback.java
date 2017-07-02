@@ -38,12 +38,12 @@ final class PreviewCallback implements Camera.PreviewCallback {
         Camera.Size cameraResolution = mConfigManager.getCameraResolution();
         if (mPreviewHandler != null) {
             Message message =
-                mPreviewHandler.obtainMessage(mPreviewMessage, cameraResolution.width, cameraResolution.height, data);
+                    mPreviewHandler.obtainMessage(mPreviewMessage, cameraResolution.width, cameraResolution.height,
+                            data);
             message.sendToTarget();
             mPreviewHandler = null;
         } else {
             Log.v(TAG, "no handler callback.");
         }
     }
-
 }

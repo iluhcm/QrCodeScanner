@@ -13,7 +13,6 @@
 
 package com.kaola.qrcodescanner.qrcode.camera;
 
-import android.content.Context;
 import android.hardware.Camera;
 import android.os.Handler;
 import android.view.SurfaceHolder;
@@ -24,16 +23,12 @@ import java.util.List;
 /**
  * This object wraps the Camera service object and expects to be the only one talking to it. The implementation
  * encapsulates the steps needed to take preview-sized images, which are used for both preview and decoding.
- *
  */
 public final class CameraManager {
 
     private static CameraManager sCameraManager;
 
     private final CameraConfigurationManager mConfigManager;
-    private Camera mCamera;
-    private boolean mInitialized;
-    private boolean mPreviewing;
     /**
      * Preview frames are delivered here, which we pass on to the registered handler. Make sure to clear the handler so
      * it will only receive one message.
@@ -41,13 +36,22 @@ public final class CameraManager {
     private final PreviewCallback mPreviewCallback;
     /** Auto-focus callbacks arrive here, and are dispatched to the Handler which requested them. */
     private final AutoFocusCallback mAutoFocusCallback;
+    private Camera mCamera;
+    private boolean mInitialized;
+    private boolean mPreviewing;
+
+    private CameraManager() {
+        this.mConfigManager = new CameraConfigurationManager();
+        mPreviewCallback = new PreviewCallback(mConfigManager);
+        mAutoFocusCallback = new AutoFocusCallback();
+    }
 
     /**
      * Initializes this static object with the Context of the calling Activity.
      */
-    public static void init(Context context) {
+    public static void init() {
         if (sCameraManager == null) {
-            sCameraManager = new CameraManager(context);
+            sCameraManager = new CameraManager();
         }
     }
 
@@ -60,32 +64,51 @@ public final class CameraManager {
         return sCameraManager;
     }
 
-    private CameraManager(Context context) {
-        this.mConfigManager = new CameraConfigurationManager(context);
-        mPreviewCallback = new PreviewCallback(mConfigManager);
-        mAutoFocusCallback = new AutoFocusCallback();
-    }
-
     /**
      * Opens the mCamera driver and initializes the hardware parameters.
      *
      * @param holder The surface object which the mCamera will draw preview frames into.
      * @throws IOException Indicates the mCamera driver failed to open.
      */
-    public void openDriver(SurfaceHolder holder) throws IOException {
+    public boolean openDriver(SurfaceHolder holder) throws IOException {
         if (mCamera == null) {
-            mCamera = Camera.open();
-            if (mCamera == null) {
-                throw new IOException();
+            try {
+                mCamera = Camera.open();
+                if (mCamera != null) {
+                    // setParameters 是针对魅族MX5做的。MX5通过Camera.open()拿到的Camera 对象不为null
+                    Camera.Parameters mParameters = mCamera.getParameters();
+                    mCamera.setParameters(mParameters);
+                    mCamera.setPreviewDisplay(holder);
+                    if (!mInitialized) {
+                        mInitialized = true;
+                        mConfigManager.initFromCameraParameters(mCamera);
+                    }
+                    mConfigManager.setDesiredCameraParameters(mCamera);
+                    return true;
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-            mCamera.setPreviewDisplay(holder);
-
-            if (!mInitialized) {
-                mInitialized = true;
-                mConfigManager.initFromCameraParameters(mCamera);
-            }
-            mConfigManager.setDesiredCameraParameters(mCamera);
         }
+        return false;
+    }
+
+    /**
+     * Closes the camera driver if still in use.
+     */
+    public boolean closeDriver() {
+        if (mCamera != null) {
+            try {
+                mCamera.release();
+                mInitialized = false;
+                mPreviewing = false;
+                mCamera = null;
+                return true;
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return false;
     }
 
     /**
@@ -95,7 +118,7 @@ public final class CameraManager {
      * @return 打开或关闭失败，则返回false。
      */
     public boolean setFlashLight(boolean open) {
-        if (mCamera == null) {
+        if (mCamera == null || !mPreviewing) {
             return false;
         }
         Camera.Parameters parameters = mCamera.getParameters();
@@ -130,43 +153,46 @@ public final class CameraManager {
                 parameters.setFlashMode(Camera.Parameters.FLASH_MODE_OFF);
                 mCamera.setParameters(parameters);
                 return true;
-            } else
+            } else {
                 return false;
-        }
-    }
-
-    /**
-     * Closes the camera driver if still in use.
-     */
-    public void closeDriver() {
-        if (mCamera != null) {
-            mCamera.release();
-            mInitialized = false;
-            mPreviewing = false;
-            mCamera = null;
+            }
         }
     }
 
     /**
      * Asks the mCamera hardware to begin drawing preview frames to the screen.
      */
-    public void startPreview() {
+    public boolean startPreview() {
         if (mCamera != null && !mPreviewing) {
-            mCamera.startPreview();
-            mPreviewing = true;
+            try {
+                mCamera.startPreview();
+                mPreviewing = true;
+                return true;
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
+        return false;
     }
 
     /**
      * Tells the mCamera to stop drawing preview frames.
      */
-    public void stopPreview() {
+    public boolean stopPreview() {
         if (mCamera != null && mPreviewing) {
-            mCamera.stopPreview();
-            mPreviewCallback.setHandler(null, 0);
-            mAutoFocusCallback.setHandler(null, 0);
-            mPreviewing = false;
+            try {
+                // 停止预览时把callback移除.
+                mCamera.setOneShotPreviewCallback(null);
+                mCamera.stopPreview();
+                mPreviewCallback.setHandler(null, 0);
+                mAutoFocusCallback.setHandler(null, 0);
+                mPreviewing = false;
+                return true;
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
+        return false;
     }
 
     /**
@@ -193,7 +219,11 @@ public final class CameraManager {
         if (mCamera != null && mPreviewing) {
             mAutoFocusCallback.setHandler(handler, message);
             // Log.d(TAG, "Requesting auto-focus callback");
-            mCamera.autoFocus(mAutoFocusCallback);
+            try {
+                mCamera.autoFocus(mAutoFocusCallback);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 }

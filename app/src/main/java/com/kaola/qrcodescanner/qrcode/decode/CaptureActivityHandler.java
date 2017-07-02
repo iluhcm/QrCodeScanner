@@ -32,10 +32,6 @@ public final class CaptureActivityHandler extends Handler {
     private final DecodeThread mDecodeThread;
     private State mState;
 
-    private enum State {
-        PREVIEW, SUCCESS, DONE
-    }
-
     public CaptureActivityHandler(QrCodeActivity activity) {
         this.mActivity = activity;
         mDecodeThread = new DecodeThread(activity);
@@ -94,4 +90,7 @@ public final class CaptureActivityHandler extends Handler {
         }
     }
 
+    private enum State {
+        PREVIEW, SUCCESS, DONE
+    }
 }

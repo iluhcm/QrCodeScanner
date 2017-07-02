@@ -29,8 +29,8 @@ public final class InactivityTimer {
 
     private static final int INACTIVITY_DELAY_SECONDS = 5 * 60;
 
-    private final ScheduledExecutorService inactivityTimer = Executors
-        .newSingleThreadScheduledExecutor(new DaemonThreadFactory());
+    private final ScheduledExecutorService inactivityTimer =
+            Executors.newSingleThreadScheduledExecutor(new DaemonThreadFactory());
     private final Activity activity;
     private ScheduledFuture<?> inactivityFuture = null;
 
@@ -42,7 +42,7 @@ public final class InactivityTimer {
     public void onActivity() {
         cancel();
         inactivityFuture =
-            inactivityTimer.schedule(new FinishListener(activity), INACTIVITY_DELAY_SECONDS, TimeUnit.SECONDS);
+                inactivityTimer.schedule(new FinishListener(activity), INACTIVITY_DELAY_SECONDS, TimeUnit.SECONDS);
     }
 
     private void cancel() {
@@ -64,5 +64,4 @@ public final class InactivityTimer {
             return thread;
         }
     }
-
 }

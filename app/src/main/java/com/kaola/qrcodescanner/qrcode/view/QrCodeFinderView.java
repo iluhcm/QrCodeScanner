@@ -36,7 +36,6 @@ public final class QrCodeFinderView extends RelativeLayout {
     private static final long ANIMATION_DELAY = 100L;
     private static final int OPAQUE = 0xFF;
 
-    private Context mContext;
     private Paint mPaint;
     private int mScannerAlpha;
     private int mMaskColor;
@@ -58,7 +57,6 @@ public final class QrCodeFinderView extends RelativeLayout {
 
     public QrCodeFinderView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        mContext = context;
         mPaint = new Paint();
 
         Resources resources = getResources();
@@ -85,7 +83,7 @@ public final class QrCodeFinderView extends RelativeLayout {
         FrameLayout frameLayout = (FrameLayout) relativeLayout.findViewById(R.id.qr_code_fl_scanner);
         mFrameRect = new Rect();
         RelativeLayout.LayoutParams layoutParams = (LayoutParams) frameLayout.getLayoutParams();
-        mFrameRect.left = (ScreenUtils.getScreenWidth(context) - layoutParams.width) / 2;
+        mFrameRect.left = (ScreenUtils.getScreenWidth() - layoutParams.width) / 2;
         mFrameRect.top = layoutParams.topMargin;
         mFrameRect.right = mFrameRect.left + layoutParams.width;
         mFrameRect.bottom = mFrameRect.top + layoutParams.height;
@@ -122,7 +120,7 @@ public final class QrCodeFinderView extends RelativeLayout {
 
     /**
      * 画聚焦框，白色的
-     * 
+     *
      * @param canvas
      * @param rect
      */
@@ -133,18 +131,18 @@ public final class QrCodeFinderView extends RelativeLayout {
         canvas.drawRect(rect.left + mAngleLength, rect.top, rect.right - mAngleLength, rect.top + mFocusThick, mPaint);
         // 左
         canvas.drawRect(rect.left, rect.top + mAngleLength, rect.left + mFocusThick, rect.bottom - mAngleLength,
-            mPaint);
+                mPaint);
         // 右
         canvas.drawRect(rect.right - mFocusThick, rect.top + mAngleLength, rect.right, rect.bottom - mAngleLength,
-            mPaint);
+                mPaint);
         // 下
         canvas.drawRect(rect.left + mAngleLength, rect.bottom - mFocusThick, rect.right - mAngleLength, rect.bottom,
-            mPaint);
+                mPaint);
     }
 
     /**
      * 画粉色的四个角
-     * 
+     *
      * @param canvas
      * @param rect
      */
@@ -180,7 +178,7 @@ public final class QrCodeFinderView extends RelativeLayout {
         float fontTotalHeight = fontMetrics.bottom - fontMetrics.top;
         float offY = fontTotalHeight / 2 - fontMetrics.bottom;
         float newY = rect.bottom + margin + offY;
-        float left = (ScreenUtils.getScreenWidth(mContext) - mPaint.getTextSize() * text.length()) / 2;
+        float left = (ScreenUtils.getScreenWidth() - mPaint.getTextSize() * text.length()) / 2;
         canvas.drawText(text, left, newY, mPaint);
     }
 
@@ -191,6 +189,5 @@ public final class QrCodeFinderView extends RelativeLayout {
         mScannerAlpha = (mScannerAlpha + 1) % SCANNER_ALPHA.length;
         int middle = rect.height() / 2 + rect.top;
         canvas.drawRect(rect.left + 2, middle - 1, rect.right - 1, middle + 2, mPaint);
-
     }
 }
